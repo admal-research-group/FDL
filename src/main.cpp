@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cfloat>
 #include <string>
+#include <LDO.h>
 
 #include "Diff.h"
 #include "Stencil.h"
@@ -28,6 +29,7 @@ int main()
     auto g(1.0*(f+f)+f+centerDiff(f,0));
     std::cout<<g<<std::endl;
 
+    LDO l;
     //diff(f,2,3) = centerDiff(centerDiff(centerDiff(centerDiff(f,0),0),1),1)
     return 0;
 }
