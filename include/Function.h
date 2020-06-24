@@ -8,15 +8,15 @@
 #ifndef INCLUDE_FUNCTION_H_
 #define INCLUDE_FUNCTION_H_
 
-#include "StencilBase.h"
+#include "LDO.h"
 
-class Function : public StencilBase<Function>// 0,0,1
+class Function : public LDO// 0,0,1
 {
 public:
-    typedef typename StencilBase<Function>::StencilTripletContainerType StencilTripletContainerType;
+    typedef typename LDO::StencilTripletContainerType StencilTripletContainerType;
 
 
-	Function() : StencilBase<Function>(StencilTripletContainerType{{std::make_pair(0,0),1.0}})
+	Function() : LDO(StencilTripletContainerType{{std::make_pair(0,0),1.0}})
 	{
 
 	}
