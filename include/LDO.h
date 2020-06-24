@@ -38,7 +38,7 @@ public:
 class LDO : public LDOExpression<LDO>
 {
 public:
-	typedef typename std::map<std::pair<int,int>,double> StencilTripletContainerType;
+	typedef std::map<std::pair<int,int>,double> StencilTripletContainerType;
 
 	StencilTripletContainerType stencilTripletContainer;
 
@@ -107,7 +107,7 @@ template<typename T1, typename T2>
 class LDOSum : public LDOExpression<LDOSum<T1,T2>>
 {
 public:
-	typedef typename std::map<std::pair<int,int>,double> StencilTripletContainerType;
+	typedef std::map<std::pair<int,int>,double> StencilTripletContainerType;
 	const T1& op1;
 	const T2& op2;
 

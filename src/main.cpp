@@ -11,9 +11,13 @@
 int main()
 {
     Function f;
-    auto le(f+f+f);
+
+    // construct LDO from expression
+    LDO le(f+f+f);
+    //default copy constructor
     LDO l(le);
 
-    std::cout << l << std::endl;
+
+    std::cout << le << std::endl;
     return 0;
 }
