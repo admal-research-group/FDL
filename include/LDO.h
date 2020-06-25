@@ -53,6 +53,14 @@ public:
 		expr.appendStencil(stencilTripletContainer);
 	}
 
+	void displayTag()
+	{
+		std::cout << "LDO" << std::endl;
+	}
+	void displayTag() const
+	{
+		std::cout << "LDO" << std::endl;
+	}
 	StencilTripletContainerType& appendStencil(StencilTripletContainerType& containerIn)
 	{
 		// append stencilTripletContainer to containerIn
@@ -93,7 +101,7 @@ public:
 	template<typename T>
 	friend T& operator << (T& os, const LDO& ldo)
 	{
-		//os  << st.derived().tag()<<" stencil:\n";
+		ldo.displayTag();
 		for(const auto& elem : ldo.stencilTripletContainer)
 		{
 			os<< elem.first.first<<" "<<elem.first.second<<" "<<elem.second<<"\n";
@@ -127,6 +135,14 @@ public:
 		// pass the container to op 1 and then to op2
 		op1.appendStencil(containerIn);
 		op2.appendStencil(containerIn);
+	}
+	void displayTag()
+	{
+		std::cout << "LDOSum" << std::endl;
+	}
+	void displayTag() const
+	{
+		std::cout << "LDOSum" << std::endl;
 	}
 };
 
