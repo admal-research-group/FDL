@@ -33,6 +33,7 @@ public:
 	{
 		return *static_cast<const T*>(this);
 	}
+
 };
 
 class LDO : public LDOExpression<LDO>
@@ -43,12 +44,12 @@ public:
 	StencilTripletContainerType stencilTripletContainer;
 
 	// Construct LDO from a stencil
-	LDO(StencilTripletContainerType stencilTripletContainer) :
+	explicit LDO(StencilTripletContainerType stencilTripletContainer) :
 		stencilTripletContainer(stencilTripletContainer){}
 
 	// Construct LDO from an expression
 	template<typename T>
-	LDO(const LDOExpression<T>& expr)
+	explicit LDO(const LDOExpression<T>& expr)
 	{
 		expr.appendStencil(stencilTripletContainer);
 	}
@@ -119,7 +120,7 @@ public:
 	const T1& op1;
 	const T2& op2;
 
-	LDOSum(const T1& op1, const T2& op2) : op1(op1),op2(op2){}
+	explicit LDOSum(const T1& op1, const T2& op2) : op1(op1),op2(op2){}
 
 	void appendStencil(StencilTripletContainerType& containerIn)
 	{
