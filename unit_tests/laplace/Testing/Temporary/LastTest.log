@@ -1,0 +1,18 @@
+Start testing: Aug 17 23:31 CDT
+----------------------------------------------------------
+1/1 Testing: Laplace
+1/1 Test: Laplace
+Command: "/Users/Nikhil/Documents/Academic/Numerics/FiniteDifferenceLibrary/unit_tests/laplace/laplace"
+Directory: /Users/Nikhil/Documents/Academic/Numerics/FiniteDifferenceLibrary/unit_tests/laplace
+"Laplace" start time: Aug 17 23:31 CDT
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"Laplace" end time: Aug 17 23:31 CDT
+"Laplace" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 17 23:31 CDT

@@ -1,30 +1,37 @@
 /*
  * LDO.h
  *
- *  Created on: Jun 23, 2020
+ *  Created on: Aug 16, 2020
  *      Author: Nikhil
  */
 
 #ifndef INCLUDE_LDO_H_
 #define INCLUDE_LDO_H_
 
-#include <map>
+#include <iostream>
+#include <iomanip>
+#include "Eigen/Core"
+#include "Eigen/Sparse"
+#include <vector>
+#include "typedef.h"
 
+
+struct CenterDiff
+{
+    static const std::map<int,double> shifts1;
+    static const std::map<int,double> shifts2;
+
+};
+const std::map<int,double> CenterDiff::shifts1{{1,0.5},{0,0},{-1,-0.5}};
+const std::map<int,double> CenterDiff::shifts2{{1,1.0},{0,-2.0},{-1,1.0}};
+
+// A Linear Differential Operator class
+// contains: operator () (function, point, h)
+//			 	computes the value of the resulting function at a point p using the grid spacing h.
 template<typename T>
-class LDOExpression
+class LDO
 {
 public:
-	typedef std::map<std::pair<int,int>,double> StencilTripletContainerType;
-	void appendStencil(StencilTripletContainerType& containerIn)
-	{
-		// append stencilTripletContainer to containerIn
-		static_cast<T*>(this)->appendStencil(containerIn);
-	}
-	void appendStencil(StencilTripletContainerType& containerIn) const
-	{
-		// append stencilTripletContainer to containerIn
-		static_cast<const T*>(this)->appendStencil(containerIn);
-	}
 	T& derived()
 	{
 		return *static_cast<T*>(this);
@@ -36,122 +43,217 @@ public:
 
 };
 
-class LDO : public LDOExpression<LDO>
-{
-public:
-	typedef std::map<std::pair<int,int>,double> StencilTripletContainerType;
 
-	StencilTripletContainerType stencilTripletContainer;
-
-	// Construct LDO from a stencil
-	explicit LDO(StencilTripletContainerType stencilTripletContainer) :
-		stencilTripletContainer(stencilTripletContainer){}
-
-	// Construct LDO from an expression
-	template<typename T>
-	explicit LDO(const LDOExpression<T>& expr)
-	{
-		expr.appendStencil(stencilTripletContainer);
-	}
-
-	void displayTag()
-	{
-		std::cout << "LDO" << std::endl;
-	}
-	void displayTag() const
-	{
-		std::cout << "LDO" << std::endl;
-	}
-	StencilTripletContainerType& appendStencil(StencilTripletContainerType& containerIn)
-	{
-		// append stencilTripletContainer to containerIn
-		for (auto elem : stencilTripletContainer)
-		{
-			auto iter(containerIn.find(elem.first));
-			if (iter==containerIn.end())
-			{// key not found
-				if(std::fabs(elem.second)>FLT_EPSILON)
-				{
-					containerIn.emplace(elem);
-				}
-			}
-			else
-				iter->second= iter->second + elem.second;
-		}
-		return containerIn;
-	}
-	StencilTripletContainerType& appendStencil(StencilTripletContainerType& containerIn) const
-	{
-		// append stencilTripletContainer to containerIn
-		for (auto elem : stencilTripletContainer)
-		{
-			auto iter(containerIn.find(elem.first));
-			if (iter==containerIn.end())
-			{// key not found
-				if(std::fabs(elem.second)>FLT_EPSILON)
-				{
-					containerIn.emplace(elem);
-				}
-			}
-			else
-				iter->second= iter->second + elem.second;
-		}
-		return containerIn;
-	}
-
-	template<typename T>
-	friend T& operator << (T& os, const LDO& ldo)
-	{
-		ldo.displayTag();
-		for(const auto& elem : ldo.stencilTripletContainer)
-		{
-			os<< elem.first.first<<" "<<elem.first.second<<" "<<elem.second<<"\n";
-		}
-		return os;
-	}
-};
-
-// LDOSum
 template<typename T1, typename T2>
-class LDOSum : public LDOExpression<LDOSum<T1,T2>>
+class LDOSum : public LDO<LDOSum<T1,T2>>
 {
 public:
-	typedef std::map<std::pair<int,int>,double> StencilTripletContainerType;
-	const T1& op1;
-	const T2& op2;
+	const T1& l1;
+	const T2& l2;
+	LDOSum(const T1& l1,const T2& l2) : l1(l1),l2(l2){}
+	SpMat assemble(int nx, int ny, double h)
+	{
+		SpMat matrix_l1= l1.assemble(nx,ny,h);
+		SpMat matrix_l2= l2.assemble(nx,ny,h);
 
-	explicit LDOSum(const T1& op1, const T2& op2) : op1(op1),op2(op2){}
+		SpMat matrix= matrix_l1+ matrix_l2;
+		return matrix;
+	}
+	SpMat assemble(int nx, int ny, double h) const
+	{
+		SpMat matrix_l1= l1.assemble(nx,ny,h);
+		SpMat matrix_l2= l2.assemble(nx,ny,h);
 
-	void appendStencil(StencilTripletContainerType& containerIn)
-	{
-		// append stencilTripletContainers of op1 and op2 to containerIn
-		// pass the container to op 1 and then to op2
-		op1.appendStencil(containerIn);
-		op2.appendStencil(containerIn);
-	}
-
-	void appendStencil(StencilTripletContainerType& containerIn) const
-	{
-		// append stencilTripletContainers of op1 and op2 to containerIn
-		// pass the container to op 1 and then to op2
-		op1.appendStencil(containerIn);
-		op2.appendStencil(containerIn);
-	}
-	void displayTag()
-	{
-		std::cout << "LDOSum" << std::endl;
-	}
-	void displayTag() const
-	{
-		std::cout << "LDOSum" << std::endl;
+		SpMat matrix= matrix_l1+ matrix_l2;
+		return matrix;
 	}
 };
 
 template<typename T1, typename T2>
-LDOSum<T1,T2> operator + (const LDOExpression<T1>& op1, const LDOExpression<T2>& op2)
+class LDOProd: public LDO<LDOProd<T1,T2>>
 {
-	return LDOSum<T1,T2> (op1.derived(),op2.derived());
+public:
+	const T1& l1;
+	const T2& l2;
+	LDOProd(const T1& l1,const T2& l2) : l1(l1),l2(l2){}
+	SpMat assemble(int nx, int ny, double h)
+	{
+		SpMat matrix_l1= l1.assemble(nx,ny,h);
+		SpMat matrix_l2= l2.assemble(nx,ny,h);
+		return matrix_l1*matrix_l2;
+	}
+	SpMat assemble(int nx, int ny, double h) const
+	{
+		SpMat matrix_l1= l1.assemble(nx,ny,h);
+		SpMat matrix_l2= l2.assemble(nx,ny,h);
+		return matrix_l1*matrix_l2;
+	}
+
+};
+
+template<typename T>
+class LDOProd<double,T>: public LDO<LDOProd<double,T>>
+{
+public:
+	const T& l;
+	double c;
+	LDOProd(double c,const T& l) : c(c),l(l){}
+	SpMat assemble(int nx, int ny, double h)
+	{
+		SpMat matrix= l.assemble(nx,ny,h);
+		return c*matrix;
+	}
+	SpMat assemble(int nx, int ny, double h) const
+	{
+		SpMat matrix= l.assemble(nx,ny,h);
+		return c*matrix;
+	}
+
+};
+
+template<typename T1,typename T2>
+LDOSum<T1,T2> operator+(const LDO<T1>& l1, const LDO<T2>& l2)
+{
+	return LDOSum<T1,T2>(l1.derived(),l2.derived());
 }
+
+template<typename T1, typename T2>
+LDOProd<T1,T2> operator*(const LDO<T1>& l1, const LDO<T2>& l2)
+{
+	return LDOProd<T1,T2>(l1.derived(),l2.derived());
+}
+template<typename T>
+LDOProd<double,T> operator*(double c, const LDO<T>& l)
+{
+	return LDOProd<double,T>(c,l.derived());
+}
+
+template<int NX,int NY, typename T>
+class Diff : public LDO<Diff<NX,NY,T>>
+{
+public:
+	Stencil stencil;
+
+	Diff()
+	{
+		Stencil begin,temp;
+
+		// begin with the identity stencil
+		begin.emplace(std::make_pair(0,0),1);
+
+		int nx= NX;
+		int ny= NY;
+		while(nx>0 || ny>0)
+		{
+			temp.clear();
+			std::map<int,double> shifts;
+			if (ny>1 || (nx>1 && ny==0))
+				shifts= T::shifts2;
+			else
+				shifts= T::shifts1;
+
+			for(const auto& elem : begin)
+			{
+				for(const auto s : shifts)
+				{
+					// shift the grid point in elem
+					std::pair<int,int> ij(ny>0 ?
+							std::make_pair(elem.first.first,elem.first.second+s.first) :
+							std::make_pair(elem.first.first+s.first,elem.first.second));
+
+					// find the shifted grid point in stencil
+					auto iter(temp.find(ij));
+					if(iter==temp.end())
+					{
+						temp.emplace(ij,elem.second*s.second);
+					}
+					else
+					{
+						iter->second+=elem.second*s.second;
+					}
+				}
+			}
+			begin= temp;
+
+			if (ny>1) ny= ny-2;
+			else if (ny==1) ny= ny-1;
+			else if (nx>1) nx= nx-2;
+			else nx= nx-1;
+		}
+
+		stencil= temp;
+	}
+
+
+	void displayStencil()
+	{
+		for (const auto& elem : stencil)
+			std::cout << elem.first.first << std::setw(8) << elem.first.second << std::setw(8) << elem.second << std::endl;
+	}
+
+
+	SpMat assemble(int nx, int ny, double h)
+	{
+		SpMat mat(nx*ny,nx*ny);
+		std::vector<Triplet> coefficients;
+
+		int index= 0;
+		for (int i_nx=0; i_nx<nx; i_nx++)
+		{
+			for (int i_ny=0; i_ny<ny; i_ny++)
+			{
+				for (const auto& elem : stencil)
+				{
+					auto elemIndex= std::make_pair(i_nx+elem.first.first, i_ny+elem.first.second);
+
+					if (elemIndex.first<nx && elemIndex.second<ny &&
+						elemIndex.first>=0 && elemIndex.second>=0)
+					{
+						Triplet t= Triplet(i_nx*ny+i_ny,
+										   elemIndex.first*ny+elemIndex.second,
+										   elem.second/pow(h,NX+NY));
+						coefficients.push_back(t);
+						//mat(i_nx*ny+i_ny,elemIndex.first*ny+elemIndex.second)= elem.second/pow(h,NX+NY);
+					}
+				}
+				index= index+1;
+			}
+		}
+		mat.setFromTriplets(coefficients.begin(), coefficients.end());
+		return mat;
+	}
+
+	SpMat assemble(int nx, int ny, double h) const
+	{
+		SpMat mat(nx*ny,nx*ny);
+		std::vector<Triplet> coefficients;
+
+		int index= 0;
+		for (int i_nx=0; i_nx<nx; i_nx++)
+		{
+			for (int i_ny=0; i_ny<ny; i_ny++)
+			{
+				for (const auto& elem : stencil)
+				{
+					auto elemIndex= std::make_pair(i_nx+elem.first.first, i_ny+elem.first.second);
+
+					if (elemIndex.first<nx && elemIndex.second<ny &&
+						elemIndex.first>=0 && elemIndex.second>=0)
+					{
+						Triplet t= Triplet(i_nx*ny+i_ny,elemIndex.first*ny+elemIndex.second,elem.second/pow(h,NX+NY));
+						coefficients.push_back(t);
+						//mat(i_nx*ny+i_ny,elemIndex.first*ny+elemIndex.second)= elem.second/pow(h,NX+NY);
+					}
+				}
+				index= index+1;
+			}
+		}
+		mat.setFromTriplets(coefficients.begin(), coefficients.end());
+		return mat;
+	}
+};
+
+
 
 
 

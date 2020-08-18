@@ -10,3 +10,4 @@ project(FDL VERSION 1.0)
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 add_subdirectory(src)
+add_subdirectory(unit_tests)
