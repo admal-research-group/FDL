@@ -41,6 +41,7 @@ int main()
 	}
 
 	// Assemble the reduced matrix
+	//SpMat matrix= (-1*(dx2+dy2)).assemble(nx,ny,1);
 	SpMat matrix= l.assemble(nx,ny,1);
 	std::vector<Pair> interior;
 	int deleted= 0;

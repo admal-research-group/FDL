@@ -11,6 +11,7 @@
 #include "Eigen/Dense"
 #include "Eigen/Sparse"
 #include "Eigen/SparseCholesky"
+#include "typedef.h"
 
 void removeRow(SpMat& matrix, unsigned int rowToRemove)
 {
@@ -60,7 +61,27 @@ MatrixXd solve(const SpMat& matrix, const MatrixXd& f)
 	return u;
 }
 
-
+void reduce(MatrixXd& matrix, const std::set<Pair>& boundary)
+{
+	int deleted= 0;
+	for(auto ix : range<int>(0,nx))
+	{
+		for(auto iy : range<int>(0,ny))
+		{
+			Pair p= std::make_pair(ix,iy);
+			auto iter= boundary.find(p);
+            // if p is an interior node
+			if (iter!=boundary.end())
+			{
+				int row= ny*ix+iy;
+				int col= ny*ix+iy;
+				removeRow(matrix,row-deleted);
+				removeColumn(matrix,col-deleted);
+				deleted++;
+			}
+		}
+	}
+}
 
 
 

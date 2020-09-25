@@ -52,7 +52,9 @@
 
 
 typedef Eigen::Matrix<double,Eigen::Dynamic, Eigen::Dynamic,Eigen::RowMajor> MatrixXd;
+typedef Eigen::Matrix<double,Eigen::Dynamic, 1,Eigen::RowMajor> VectorXd;
 typedef std::pair<int,int> Pair;
+typedef std::pair<int,int> Paird;
 typedef std::map<std::pair<int,int>,double> Stencil;
 typedef Eigen::Triplet<double> Triplet;
 typedef Eigen::SparseMatrix<double,Eigen::RowMajor> SpMat;

@@ -35,10 +35,12 @@ public:
 	T& derived()
 	{
 		return *static_cast<T*>(this);
+		//return static_cast<T&>(*this);
 	}
 	const T& derived() const
 	{
 		return *static_cast<const T*>(this);
+		//return static_cast<const T&>(*this);
 	}
 
 };
@@ -48,21 +50,14 @@ template<typename T1, typename T2>
 class LDOSum : public LDO<LDOSum<T1,T2>>
 {
 public:
-	const T1& l1;
-	const T2& l2;
-	LDOSum(const T1& l1,const T2& l2) : l1(l1),l2(l2){}
-	SpMat assemble(int nx, int ny, double h)
+	T1 l1;
+	T2 l2;
+	LDOSum(const T1& l1,const T2& l2) : l1(l1),l2(l2)
+    { }
+	SpMat assemble(const Grid& grid) const
 	{
-		SpMat matrix_l1= l1.assemble(nx,ny,h);
-		SpMat matrix_l2= l2.assemble(nx,ny,h);
-
-		SpMat matrix= matrix_l1+ matrix_l2;
-		return matrix;
-	}
-	SpMat assemble(int nx, int ny, double h) const
-	{
-		SpMat matrix_l1= l1.assemble(nx,ny,h);
-		SpMat matrix_l2= l2.assemble(nx,ny,h);
+		SpMat matrix_l1= l1.assemble(grid);
+		SpMat matrix_l2= l2.assemble(grid);
 
 		SpMat matrix= matrix_l1+ matrix_l2;
 		return matrix;
@@ -73,19 +68,13 @@ template<typename T1, typename T2>
 class LDOProd: public LDO<LDOProd<T1,T2>>
 {
 public:
-	const T1& l1;
-	const T2& l2;
+	T1 l1;
+	T2 l2;
 	LDOProd(const T1& l1,const T2& l2) : l1(l1),l2(l2){}
-	SpMat assemble(int nx, int ny, double h)
+	SpMat assemble(const Grid& grid) const
 	{
-		SpMat matrix_l1= l1.assemble(nx,ny,h);
-		SpMat matrix_l2= l2.assemble(nx,ny,h);
-		return matrix_l1*matrix_l2;
-	}
-	SpMat assemble(int nx, int ny, double h) const
-	{
-		SpMat matrix_l1= l1.assemble(nx,ny,h);
-		SpMat matrix_l2= l2.assemble(nx,ny,h);
+		SpMat matrix_l1= l1.assemble(grid);
+		SpMat matrix_l2= l2.assemble(grid);
 		return matrix_l1*matrix_l2;
 	}
 
@@ -95,17 +84,12 @@ template<typename T>
 class LDOProd<double,T>: public LDO<LDOProd<double,T>>
 {
 public:
-	const T& l;
 	double c;
-	LDOProd(double c,const T& l) : c(c),l(l){}
-	SpMat assemble(int nx, int ny, double h)
+	T l;
+	LDOProd(const double& c,const T& l) : c(c),l(l) { }
+	SpMat assemble(const Grid& grid) const
 	{
-		SpMat matrix= l.assemble(nx,ny,h);
-		return c*matrix;
-	}
-	SpMat assemble(int nx, int ny, double h) const
-	{
-		SpMat matrix= l.assemble(nx,ny,h);
+		SpMat matrix= l.assemble(grid);
 		return c*matrix;
 	}
 
@@ -123,7 +107,7 @@ LDOProd<T1,T2> operator*(const LDO<T1>& l1, const LDO<T2>& l2)
 	return LDOProd<T1,T2>(l1.derived(),l2.derived());
 }
 template<typename T>
-LDOProd<double,T> operator*(double c, const LDO<T>& l)
+LDOProd<double,T> operator*(const double& c, const LDO<T>& l)
 {
 	return LDOProd<double,T>(c,l.derived());
 }
@@ -190,27 +174,31 @@ public:
 		for (const auto& elem : stencil)
 			std::cout << elem.first.first << std::setw(8) << elem.first.second << std::setw(8) << elem.second << std::endl;
 	}
-
-
-	SpMat assemble(int nx, int ny, double h)
+	void displayStencil() const
 	{
-		SpMat mat(nx*ny,nx*ny);
-		std::vector<Triplet> coefficients;
+		for (const auto& elem : stencil)
+			std::cout << elem.first.first << std::setw(8) << elem.first.second << std::setw(8) << elem.second << std::endl;
+	}
 
+
+	SpMat assemble(const Grid& grid)
+	{
+		SpMat mat(grid.nx*grid.ny,grid.nx*grid.ny);
+		std::vector<Triplet> coefficients;
 		int index= 0;
-		for (int i_nx=0; i_nx<nx; i_nx++)
+		for (int i_nx=0; i_nx<grid.nx; i_nx++)
 		{
-			for (int i_ny=0; i_ny<ny; i_ny++)
+			for (int i_ny=0; i_ny<grid.ny; i_ny++)
 			{
 				for (const auto& elem : stencil)
 				{
 					auto elemIndex= std::make_pair(i_nx+elem.first.first, i_ny+elem.first.second);
 
-					if (elemIndex.first<nx && elemIndex.second<ny &&
+					if (elemIndex.first<grid.nx && elemIndex.second<grid.ny &&
 						elemIndex.first>=0 && elemIndex.second>=0)
 					{
-						Triplet t= Triplet(i_nx*ny+i_ny,
-										   elemIndex.first*ny+elemIndex.second,
+						Triplet t= Triplet(i_nx*grid.ny+i_ny,
+										   elemIndex.first*grid.ny+elemIndex.second,
 										   elem.second/pow(h,NX+NY));
 						coefficients.push_back(t);
 						//mat(i_nx*ny+i_ny,elemIndex.first*ny+elemIndex.second)= elem.second/pow(h,NX+NY);
@@ -223,24 +211,25 @@ public:
 		return mat;
 	}
 
-	SpMat assemble(int nx, int ny, double h) const
+	SpMat assemble(const Grid& grid) const
 	{
-		SpMat mat(nx*ny,nx*ny);
+		SpMat mat(grid.nx*grid.ny,grid.nx*grid.ny);
 		std::vector<Triplet> coefficients;
-
 		int index= 0;
-		for (int i_nx=0; i_nx<nx; i_nx++)
+		for (int i_nx=0; i_nx<grid.nx; i_nx++)
 		{
-			for (int i_ny=0; i_ny<ny; i_ny++)
+			for (int i_ny=0; i_ny<grid.ny; i_ny++)
 			{
 				for (const auto& elem : stencil)
 				{
 					auto elemIndex= std::make_pair(i_nx+elem.first.first, i_ny+elem.first.second);
 
-					if (elemIndex.first<nx && elemIndex.second<ny &&
+					if (elemIndex.first<grid.nx && elemIndex.second<grid.ny &&
 						elemIndex.first>=0 && elemIndex.second>=0)
 					{
-						Triplet t= Triplet(i_nx*ny+i_ny,elemIndex.first*ny+elemIndex.second,elem.second/pow(h,NX+NY));
+						Triplet t= Triplet(i_nx*grid.ny+i_ny,
+										   elemIndex.first*grid.ny+elemIndex.second,
+										   elem.second/pow(h,NX+NY));
 						coefficients.push_back(t);
 						//mat(i_nx*ny+i_ny,elemIndex.first*ny+elemIndex.second)= elem.second/pow(h,NX+NY);
 					}

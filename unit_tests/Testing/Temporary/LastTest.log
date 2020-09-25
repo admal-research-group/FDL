@@ -1,19 +1,33 @@
-Start testing: Aug 17 14:01 CDT
+Start testing: Aug 19 15:41 CDT
 ----------------------------------------------------------
-1/1 Testing: Laplace
-1/1 Test: Laplace
+1/2 Testing: Laplace
+1/2 Test: Laplace
 Command: "/Users/Nikhil/Documents/Academic/Numerics/FiniteDifferenceLibrary/unit_tests/laplace/laplace"
 Directory: /Users/Nikhil/Documents/Academic/Numerics/FiniteDifferenceLibrary/unit_tests/laplace
-"Laplace" start time: Aug 17 14:01 CDT
+"Laplace" start time: Aug 19 15:41 CDT
 Output:
 ----------------------------------------------------------
-Assertion failed: (it->row()>=0 && it->row()<mat.rows() && it->col()>=0 && it->col()<mat.cols()), function set_from_triplets, file /Users/Nikhil/Documents/Academic/Numerics/FiniteDifferenceLibrary/include/Eigen/src/SparseCore/SparseMatrix.h, line 934.
 <end of output>
-Test time =   0.59 sec
+Test time =   0.29 sec
 ----------------------------------------------------------
-Test Failed.
-"Laplace" end time: Aug 17 14:01 CDT
+Test Passed.
+"Laplace" end time: Aug 19 15:41 CDT
 "Laplace" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Aug 17 14:01 CDT
+2/2 Testing: Poisson
+2/2 Test: Poisson
+Command: "/Users/Nikhil/Documents/Academic/Numerics/FiniteDifferenceLibrary/unit_tests/poisson/poisson"
+Directory: /Users/Nikhil/Documents/Academic/Numerics/FiniteDifferenceLibrary/unit_tests/poisson
+"Poisson" start time: Aug 19 15:41 CDT
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"Poisson" end time: Aug 19 15:41 CDT
+"Poisson" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 19 15:41 CDT
